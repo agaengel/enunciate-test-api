@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.oneandone.ebusiness</groupId>
+    <artifactId>ebusiness-parent</artifactId>
+    <version>6.0.36</version>
+  </parent>
+
+  <groupId>com.ionos.beat.template</groupId>
+  <artifactId>beat-template-api</artifactId>
+  <version>1.0.2-jakarta-SNAPSHOT</version>
+
+  <name>BEAT Template Project - API</name>
+  <description>API for Template Project</description>
+  <inceptionYear>2022</inceptionYear>
+
+  <scm>
+    <url>https://bitbucket.united-internet.org/scm/beat-template/beat-template-api.git</url>
+    <connection>scm:git:ssh://git@bitbucket.united-internet.org/beat-template/beat-template-api.git</connection>
+    <tag>HEAD</tag>
+  </scm>
+  <properties>
+    <!-- TODO remove if updated in parent  -->
+    <enunciate.version>2.14.0</enunciate.version>
+
+    <!-- API jars could be used by others therefore we use a LTS version -->
+    <java.source.version>17</java.source.version>
+    <java.target.version>17</java.target.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>jakarta.ws.rs</groupId>
+        <artifactId>jakarta.ws.rs-api</artifactId>
+        <version>3.1.0</version> <!-- managed due to enunciate 2.14.0 depends on version 3.0.0 -->
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!-- REST dependencies -->
+    <dependency>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.13.4</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- bean validation dependencies-->
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+      <version>3.0.2</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- BEAT dependencies -->
+    <dependency>
+      <groupId>com.ionos.beat</groupId>
+      <artifactId>beat-paging-sorting-api</artifactId>
+      <version>1.1.0-jakarta-SNAPSHOT</version>
+      <classifier>v1</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.ionos.beat</groupId>
+      <artifactId>beat-error-handling-api</artifactId>
+      <version>2.3.0-jakarta-SNAPSHOT</version>
+      <classifier>v2</classifier>
+    </dependency>
+
+    <!-- method security dependencies -->
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+      <version>2.1.1</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- util validation-->
+    <dependency>
+      <groupId>com.webcohesion.enunciate</groupId>
+      <artifactId>enunciate-core-annotations</artifactId>
+      <version>${enunciate.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.immutables</groupId>
+      <artifactId>value</artifactId>
+      <version>2.9.3</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>com.webcohesion.enunciate</groupId>
+          <artifactId>enunciate-maven-plugin</artifactId>
+          <version>${enunciate.version}</version>
+          <configuration>
+            <configFile>src/conf/enunciate.xml</configFile>
+            <enunciateArtifactId />
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <!-- Run compiler with -parameters so method parameters will appear correctly in validation errors -->
+          <parameters>true</parameters>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>cz.habarta.typescript-generator</groupId>
+        <artifactId>typescript-generator-maven-plugin</artifactId>
+        <version>2.36.1070</version>
+        <executions>
+          <execution>
+            <id>generate</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <phase>process-classes</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <jsonLibrary>jackson2</jsonLibrary>
+          <outputKind>module</outputKind>
+          <outputFile>target/typescript-generator/index.ts</outputFile>
+          <outputFileType>implementationFile</outputFileType>
+          <generateNpmPackageJson>true</generateNpmPackageJson>
+          <npmVersion>${project.version}</npmVersion>
+          <npmBuildScript>
+            tsc --module commonjs --moduleResolution node --typeRoots --target es6 --lib esnext --skipLibCheck --declaration --sourceMap $outputFile
+          </npmBuildScript>
+          <classesFromAutomaticJaxrsApplication>true</classesFromAutomaticJaxrsApplication>
+          <generateConstructors>true</generateConstructors>
+          <mapClasses>asClasses</mapClasses>
+          <mapEnum>asEnum</mapEnum>
+          <nonConstEnums>true</nonConstEnums>
+          <mapMap>asRecord</mapMap>
+          <requiredAnnotations>
+            <annotation>jakarta.validation.constraints.NotBlank</annotation>
+            <annotation>jakarta.validation.constraints.NotEmpty</annotation>
+            <annotation>jakarta.validation.constraints.NotNull</annotation>
+          </requiredAnnotations>
+          <extensionsWithConfiguration>
+            <extension>
+              <className>cz.habarta.typescript.generator.ext.AxiosClientExtension</className>
+              <configuration>
+                <axiosVersion>^0.26.0</axiosVersion>
+              </configuration>
+            </extension>
+          </extensionsWithConfiguration>
+          <npmTypescriptVersion>^4.5.0</npmTypescriptVersion>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.webcohesion.enunciate</groupId>
+        <artifactId>enunciate-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate</id>
+            <goals>
+              <goal>docs</goal>
+            </goals>
+            <phase>process-classes</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>com.webcohesion.enunciate</groupId>
+        <artifactId>enunciate-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
+</project>
